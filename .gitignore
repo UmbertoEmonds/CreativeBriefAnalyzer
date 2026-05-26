@@ -1,0 +1,14 @@
+# Environnement virtuel
+.venv/
+venv/
+ENV/
+
+# Variables d'environnement / Clés API
+.env
+
+# Fichiers système Mac
+.DS_Store
+
+# Caches Python
+__pycache__/
+*.pyc
