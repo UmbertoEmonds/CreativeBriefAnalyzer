@@ -3,6 +3,7 @@ from agentbrief.state import BriefState, QA
 from langchain_tavily import TavilySearch
 from fpdf import FPDF
 from datetime import datetime
+import os
 
 from agentbrief.utils.md_to_pdf_parser import MarkdownPDFParser
 
@@ -177,7 +178,12 @@ def create_pdf(state: BriefState):
 
     # Sauvegarde avec Timestamp
     timestamp = datetime.now().strftime("%Y%m%d_%H%M")
-    filename = f"brief_{timestamp}.pdf"
+
+    output_dir = "output"
+    os.makedirs(output_dir, exist_ok=True)
+
+    filename = f"{output_dir}/brief_{timestamp}.pdf"
+
     pdf.output(filename)
 
     return {"result_path": filename}
