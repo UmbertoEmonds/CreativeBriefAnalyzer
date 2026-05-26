@@ -12,6 +12,9 @@ ENV/
 # Fichiers système Mac
 .DS_Store
 
+# Outputs
+output/
+
 # Caches Python
 __pycache__/
 *.pyc
