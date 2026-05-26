@@ -6,6 +6,9 @@ ENV/
 # Variables d'environnement / Clés API
 .env
 
+# IntelliJ
+.idea/
+
 # Fichiers système Mac
 .DS_Store
 
