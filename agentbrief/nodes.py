@@ -66,7 +66,7 @@ def ask(state: BriefState, llm):
                 containing a list with a single QA entry.
     """
     question = llm.invoke(
-        f" {state['analyse']} A partir de ces informations, génère une question qui sera renvoyé directement à l'utilisateur.")
+        f" {state['analyse']}. A partir de ces informations, génère UNIQUEMENT une question qui sera renvoyée directement à l'utilisateur.")
     approved = interrupt(question)
 
     return {"questions_answers": [QA(q=question.content, r=approved)]}
@@ -132,6 +132,8 @@ def generate_final_data(state: BriefState, llm):
         - Titre
         - Concepts clés avec explications simples
         - Exemples concrets
+        - Exploration détaillée et description complète
+        - Mise en oeuvre concrète du projet - marche à suivre détaillée
         - Points à retenir
         - Un mot d'encouragement à destination du profil cible
         """
