@@ -8,10 +8,9 @@ print("""
 ║           Analyseur de Brief - © Umberto Emonds          ║
 ╚══════════════════════════════════════════════════════════╝
 
-  Décris ton sujet. Nous l'analyserons pour toi et te 
+  Décris ton brief (sujet). Nous l'analyserons pour toi et te 
   poserons des questions de clarification si nécessaire.
-  Un document PDF pédagogique et structuré te sera 
-  proposé à l'issue de cet échange.
+  Un document PDF pédagogique et structuré sera généré à l'issue de cette séance.
 """)
 
 user_brief = input("  À toi de jouer : ")
