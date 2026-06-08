@@ -1,4 +1,6 @@
 from langgraph.types import interrupt
+
+from agentbrief.rag import build_retriever
 from agentbrief.state import BriefState, QA
 from langchain_tavily import TavilySearch
 from fpdf import FPDF
@@ -71,36 +73,24 @@ def ask(state: BriefState, llm):
 
     return {"questions_answers": [QA(q=question.content, r=approved)]}
 
-def search_web(state: BriefState):
-    """
-        Perform a web search based on the original brief.
+def retrieve(state: BriefState, llm):
+    query_response = llm.invoke(
+        f"""Extrais UNIQUEMENT les mots-clés techniques du sujet principal de ce brief.
+        Ignore le format de livrable (carte mentale, PDF, slides...).
+        Maximum 5 mots-clés. Exemple de format : 'LangGraph Python agents StateGraph'
 
-        Uses the Tavily search API to retrieve relevant web sources.
-        The query is truncated to 400 characters to comply with Tavily's
-        API limit. Results are formatted as a readable string with
-        source URLs and content snippets.
+        Brief : {state['input']}"""
+    )
 
-        Args:
-            state (BriefState): The current graph state, containing the
-                original brief ('input').
+    # Tavily input limit : 400
+    tavily_tool = TavilySearch(max_results=10)
 
-        Returns:
-            dict: A partial state update with the key 'web_result' containing the formatted search results as a string.
-    """
-    tavily_tool = TavilySearch(max_results=3)
+    results = tavily_tool.invoke(query_response.content[:400])
+    urls = [r["url"] for r in results["results"]]
 
-    # Tavily limit
-    query = state["input"][:400]
+    rag_result = build_retriever(urls, state["input"])
 
-    results = tavily_tool.invoke(query)
-
-    items = results["results"]
-    formatted_results = "\n".join([
-        f"Source: {res['url']}\nContenu: {res['content']}\n"
-        for res in items
-    ])
-
-    return {"web_result": formatted_results}
+    return {"rag_result": rag_result}
 
 def generate_final_data(state: BriefState, llm):
     """
@@ -125,7 +115,7 @@ def generate_final_data(state: BriefState, llm):
         Brief : {state['input']} 
         Analyse : {state['analyse']} 
         Clarifications : {state['questions_answers']} 
-        Recherche web : {state['web_result']}
+        Recherche web : {state['rag_result']}
         
         À partir de ces informations, génère directement le contenu complet de la fiche au format markdown.
         La fiche doit contenir les sections suivantes, avec le contenu réel :
