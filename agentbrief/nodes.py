@@ -1,14 +1,9 @@
 from langgraph.types import interrupt
-
 from agentbrief.rag import build_retriever
 from agentbrief.state import BriefState, QA
 from langchain_tavily import TavilySearch
-from fpdf import FPDF
 from datetime import datetime
 import os
-
-from agentbrief.utils.md_to_pdf_parser import MarkdownPDFParser
-
 
 def call_model(state: BriefState, llm):
     """
@@ -112,70 +107,68 @@ def generate_final_data(state: BriefState, llm):
     """
     response = llm.invoke(
         f"""
-        Brief : {state['input']} 
-        Analyse : {state['analyse']} 
-        Clarifications : {state['questions_answers']} 
-        Recherche web : {state['rag_result']}
+        Tu es un expert pédagogique qui rédige des fiches de référence claires et actionnables.
         
-        À partir de ces informations, génère directement le contenu complet de la fiche au format markdown.
-        La fiche doit contenir les sections suivantes, avec le contenu réel :
-        - Titre
-        - Concepts clés avec explications simples
-        - Exemples concrets
-        - Exploration détaillée et description complète
-        - Mise en oeuvre concrète du projet - marche à suivre détaillée
-        - Points à retenir
-        - Un mot d'encouragement à destination du profil cible
+        ## Contexte
+        Brief original : {state['input']}
+        Analyse du brief : {state['analyse']}
+        Clarifications obtenues : {state['questions_answers']}
+        Sources web consultées : {state['rag_result']}
+        
+        ## Mission
+        Rédige une fiche complète, didactique et immédiatement utilisable au format Markdown.
+        Le contenu doit être réel, précis et adapté au profil cible identifié dans le brief.
+        Ne génère PAS de méta-commentaires sur la fiche — génère directement le contenu.
+        
+        ## Structure obligatoire
+        
+        # [Titre accrocheur et descriptif]
+        
+        ## Introduction
+        Contexte et enjeux en 3-4 phrases. Pourquoi ce sujet est important pour le profil cible.
+        
+        ## Concepts clés
+        Pour chaque concept : définition simple, analogie concrète, exemple d'usage.
+        
+        ## Exemples concrets
+        Minimum 2 exemples détaillés et applicables immédiatement.
+        Si pertinent, inclure des blocs de code avec syntaxe correcte.
+        
+        ## Exploration approfondie
+        Description complète des mécanismes, nuances et cas d'usage avancés.
+        
+        ## Mise en œuvre — Guide pas à pas
+        Étapes numérotées, précises et actionnables.
+        Chaque étape doit être suffisamment détaillée pour être suivie sans ambiguïté.
+        
+        ## Points à retenir
+        5 à 7 points essentiels en bullet points.
+        
+        ## Pour aller plus loin
+        2-3 ressources ou pistes d'approfondissement.
+        
+        ## Mot de fin
+        Message d'encouragement personnalisé pour le profil cible identifié.
+        
+        ## Contraintes de rédaction
+        - Ton : adapté au profil cible identifié dans le brief et l'analyse
+        - Utilise tout ce que Markdown permet : titres, bold, italic, code, tableaux, listes
+        - Chaque section doit avoir du contenu substantiel — pas de remplissage
+        - Les exemples de code doivent être corrects et fonctionnels
         """
     )
 
     return {"final_data": response.content}
 
-def create_pdf(state: BriefState):
-    """
-        Generate a PDF file from the final structured content.
-
-        Creates a formatted A4 PDF document using fpdf2 with Unicode font
-        support. The PDF includes a centered title header followed by the
-        full content of the fiche. The output file is timestamped and saved
-        to the current working directory.
-
-        Args:
-            state (BriefState): The current graph state containing
-                'final_data' with the content to render.
-
-        Returns:
-            dict: A partial state update with the key 'result_path'
-                containing the filename of the generated PDF.
-    """
-    pdf = FPDF()
-    pdf.add_page()
-
-    # Import de la police pour gérer les caractères spéciaux / accents
-    pdf.add_font("ArialUnicode", "", "/System/Library/Fonts/Supplemental/Arial Unicode.ttf")
-
-    """
-    # Titre principal du document
-    pdf.set_font('ArialUnicode', size=22)
-    pdf.cell(0, 15, "Fiche de Brief Stratégique", ln=True, align='C')
-    pdf.ln(5)
-    """
-
-    # Récupération du contenu Markdown
+def create_markdown(state: BriefState):
     content = state.get("final_data", "Aucun contenu généré.")
 
-    # Utilisation du parseur personnalisé
-    parser = MarkdownPDFParser(pdf, font_name="ArialUnicode")
-    parser.parse(content)
-
-    # Sauvegarde avec Timestamp
     timestamp = datetime.now().strftime("%Y%m%d_%H%M")
-
     output_dir = "output"
     os.makedirs(output_dir, exist_ok=True)
+    filename = f"{output_dir}/brief_{timestamp}.md"
 
-    filename = f"{output_dir}/brief_{timestamp}.pdf"
-
-    pdf.output(filename)
+    with open(filename, "w", encoding="utf-8") as f:
+        f.write(content)
 
     return {"result_path": filename}
