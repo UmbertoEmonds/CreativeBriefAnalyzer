@@ -4,10 +4,10 @@ def route_after_analysis(state: BriefState) -> str:
     """
         Determines the next routing step after the initial analysis phase.
 
-        Enforces a maximum question limit by routing directly to 'search_web'
+        Enforces a maximum question limit by routing directly to 'retrieve'
         once enough clarifications have been collected. If the limit is not
         reached, routes to 'more' when the LLM flags the brief as incomplete,
-        or to 'search_web' otherwise.
+        or to 'retrieve' otherwise.
 
         Args:
             state (BriefState): The current graph state, expected to contain
@@ -15,7 +15,7 @@ def route_after_analysis(state: BriefState) -> str:
                 'questions_answers' key with the clarification history.
 
         Returns:
-            str: 'search_web' if the question limit is reached or the brief
+            str: 'retrieve' if the question limit is reached or the brief
                  is sufficiently detailed. 'more' if the analysis contains
                  'CLARIFICATION_NEEDED'.
     """
@@ -23,11 +23,11 @@ def route_after_analysis(state: BriefState) -> str:
 
     # 4 questions limit
     if len(qa) >= 4:
-        return "search_web"
+        return "retrieve"
 
     if "CLARIFICATION_NEEDED" in state.get("analyse", ""):
         return "more"
-    return "search_web"
+    return "retrieve"
 
 def route_after_clarification(state: BriefState) -> str:
     """
@@ -44,13 +44,13 @@ def route_after_clarification(state: BriefState) -> str:
                 for question and 'r' for user response).
 
         Returns:
-            str: 'search_web' if the user provides a stopping phrase
+            str: 'retrieve' if the user provides a stopping phrase
                  (e.g., 'non', 'stop', 'ça suffit', 'comme tu veux').
-                 Otherwise returns 'call_model' to continue the loop.
+                 Otherwise, returns 'call_model' to continue the loop.
     """
     last_qa = state.get("questions_answers", [])
 
     # Check if the user wants to stop the clarification process
     if last_qa and last_qa[-1]["r"].lower() in ["non", "stop", "ça suffit", "comme tu veux"]:
-        return "search_web"
+        return "retrieve"
     return "call_model"

@@ -9,6 +9,6 @@ class BriefState(TypedDict):
     input: str
     analyse: str
     questions_answers: Annotated[list[QA], operator.add]
-    web_result: str
+    rag_result: str
     final_data: str
     result_path: str
