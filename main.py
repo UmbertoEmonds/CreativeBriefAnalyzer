@@ -10,7 +10,7 @@ print("""
 
   Décris ton brief (sujet). Nous l'analyserons pour toi et te 
   poserons des questions de clarification si nécessaire.
-  Un document PDF pédagogique et structuré sera généré à l'issue de cette séance.
+  Un document .markdown pédagogique et structuré sera généré à l'issue de cette séance.
 """)
 
 user_brief = input("  À toi de jouer : ")
@@ -38,5 +38,5 @@ while "__interrupt__" in result:
     )
 
 print("\n" + "─" * 60)
-print(f"PDF généré avec succès 📄 ({result['result_path']})")
+print(f"Markdown généré avec succès 📄 ({result['result_path']})")
 print("─" * 60 + "\n")
