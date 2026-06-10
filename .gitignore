@@ -9,6 +9,9 @@ ENV/
 # IntelliJ
 .idea/
 
+# VSCode
+.vscode/
+
 # Fichiers système Mac
 .DS_Store
 
