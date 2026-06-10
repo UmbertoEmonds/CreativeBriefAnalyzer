@@ -1,7 +1,9 @@
+import uuid
+
 from agentbrief.graph import graph
 from langgraph.types import Command
 
-config = {"configurable": {"thread_id": "1"}}
+config = {"configurable": {"thread_id": str(uuid.uuid4())}}
 
 print("""
 ╔══════════════════════════════════════════════════════════╗
@@ -10,7 +12,7 @@ print("""
 
   Décris ton brief (sujet). Nous l'analyserons pour toi et te 
   poserons des questions de clarification si nécessaire.
-  Un document .markdown pédagogique et structuré sera généré à l'issue de cette séance.
+  Une fiche HTML pédagogique et structurée sera générée à l'issue de cette séance.
 """)
 
 user_brief = input("  À toi de jouer : ")
@@ -38,5 +40,5 @@ while "__interrupt__" in result:
     )
 
 print("\n" + "─" * 60)
-print(f"Markdown généré avec succès 📄 ({result['result_path']})")
+print(f"Fiche HTML générée avec succès 📄 ({result['result_path']})")
 print("─" * 60 + "\n")

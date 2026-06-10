@@ -5,6 +5,10 @@ from langchain_tavily import TavilySearch
 from datetime import datetime
 import os
 
+from agentbrief.templates import render_dashboard_template
+from agentbrief.utils.md_to_html import markdown_to_html
+
+
 def call_model(state: BriefState, llm):
     """
         Analyze a creative brief using an LLM.
@@ -32,13 +36,18 @@ def call_model(state: BriefState, llm):
 
     response = llm.invoke(
         f"""
-        Tu es un assistant qui analyse des briefs créatifs.
-        Analyse ce brief : {user_input}
+        Tu es un assistant expert dans l'analyse de briefs de projets. Ton unique rôle est de vérifier si le brief contient les informations fondamentales nécessaires pour concevoir le livrable (qui est le public cible, quel est l'objectif principal, quel est le format ou le type de document attendu).
         
+        ## DONNÉES
+        Brief à analyser : {user_input}
         Historique des clarifications : {history_plain}
 
-        Si le brief manque d'informations essentielles (cible, format, objectif), commence ta réponse par CLARIFICATION_NEEDED.
-        Sinon, fais directement une analyse complète.
+        ## DIRECTIVES STRICTES DE SÉCURITÉ :
+        - NE TENTE JAMAIS de définir, de développer, d'interpréter ou de deviner le sens des acronymes, des sigles, du jargon ou des termes spécifiques au domaine du brief. Traite-les comme des concepts opaques sans chercher à les expliciter à ce stade.
+        - Concentre-toi exclusivement sur la structure du besoin : Sait-on à QUI s'adresse ce projet ? Sait-on QUEL est le but précis recherché ?
+
+        Si le brief manque d'informations fondamentales pour commencer la rédaction, commence ta réponse EXACTEMENT par le mot-clé : CLARIFICATION_NEEDED
+        Sinon, fais directement une analyse complète de la demande.
         """
     )
     return {"analyse": response.content}
@@ -63,7 +72,17 @@ def ask(state: BriefState, llm):
                 containing a list with a single QA entry.
     """
     question = llm.invoke(
-        f" {state['analyse']}. A partir de ces informations, génère UNIQUEMENT une question qui sera renvoyée directement à l'utilisateur.")
+        f"""Tu es un analyste rigoureux. Ton rôle est de poser une unique question à l'utilisateur pour combler les manques essentiels du brief identifiés dans l'analyse ci-dessous.
+
+        Analyse du brief : {state['analyse']}
+
+        ## RÈGLE DE SÉCURITÉ ABSOLUE :
+        - INTERDICTION TOTALE de définir, de deviner, d'étendre ou d'expliciter le sens des acronymes, abréviations ou expressions spécifiques utilisés dans le brief.
+        - Ne fais aucune supposition sur le sens des mots. Si tu dois mentionner un terme ou un acronyme issu du brief, utilise-le strictement BRUT, tel quel, sans jamais essayer de l'expliquer.
+        - Formule une question courte, neutre, polie et directe.
+
+        Génère UNIQUEMENT la question à renvoyer à l'utilisateur :"""
+    )
     approved = interrupt(question)
 
     return {"questions_answers": [QA(q=question.content, r=approved)]}
@@ -85,7 +104,10 @@ def retrieve(state: BriefState, llm):
 
     rag_result = build_retriever(urls, state["input"])
 
-    return {"rag_result": rag_result}
+    return {
+        "rag_result": rag_result,
+        "sources": urls,
+    }
 
 def generate_final_data(state: BriefState, llm):
     """
@@ -106,69 +128,96 @@ def generate_final_data(state: BriefState, llm):
             dict: A partial state update with the key 'final_data' containing the generated content as a string.
     """
     response = llm.invoke(
-        f"""
-        Tu es un expert pédagogique qui rédige des fiches de référence claires et actionnables.
+        f"""Tu es un expert en ingénierie pédagogique et un rédacteur senior de premier ordre. Ta mission est de rédiger une fiche de référence d'une rigueur absolue, claire, didactique et immédiatement actionnable sur le sujet demandé.
         
-        ## Contexte
-        Brief original : {state['input']}
-        Analyse du brief : {state['analyse']}
-        Clarifications obtenues : {state['questions_answers']}
-        Sources web consultées : {state['rag_result']}
+        ## CONTEXTE ET DONNÉES SOURCES (Tes seules vérités factuelles)
+        - Brief original de l'utilisateur : {state['input']}
+        - Analyse initiale du besoin : {state['analyse']}
         
-        ## Mission
-        Rédige une fiche complète, didactique et immédiatement utilisable au format Markdown.
-        Le contenu doit être réel, précis et adapté au profil cible identifié dans le brief.
-        Ne génère PAS de méta-commentaires sur la fiche — génère directement le contenu.
+        - CLARIFICATIONS DE L'UTILISATEUR (À intégrer impérativement pour calibrer le niveau et les attentes) : 
+        {state['questions_answers']}
         
-        ## Structure obligatoire
+        - INFORMATIONS ISSUES DU RECHERCHE WEB / RAG (Ta seule source autorisée pour les faits, chiffres ou spécificités) : 
+        {state['rag_result']}
         
-        # [Titre accrocheur et descriptif]
+        ## DIRECTIVES CRITIQUES ANTI-HALLUCINATION
+        1. ANCRAGE STRICT AUX FAITS : Toutes les définitions, données, caractéristiques ou méthodologies propres au sujet DOIVENT être extraites ou validées par les "Informations issues du RAG". Si une information cruciale n'est pas présente, ne l'invente pas. Préfère rester factuel plutôt que d'inventer des fonctionnalités, des concepts ou des données fictives.
+        2. PAS D'IMPROVISATION DE CONTENU : Ne crée jamais de faux exemples magiques, de fausses statistiques ou des éléments imaginaires pour simplifier ton explication. Tout exemple doit refléter la réalité concrète du domaine abordé (qu'il soit technique, marketing, managérial, etc.).
+        3. ADAPTATION AU PROFIL : Utilise les "Clarifications obtenues" pour aligner précisément la complexité, le vocabulaire et les exemples de la fiche avec le profil et les besoins réels formulés par l'utilisateur.
+        
+        ## MISSION
+        Rédige une fiche complète, structurée et immédiatement utilisable au format Markdown.
+        Ne génère PAS de préambule ni de méta-commentaires (commence directement au titre #).
+        
+        ## STRUCTURE OBLIGATOIRE
+        
+        # [Titre accrocheur et descriptif du sujet]
         
         ## Introduction
-        Contexte et enjeux en 3-4 phrases. Pourquoi ce sujet est important pour le profil cible.
+        Contexte et enjeux en 3-4 phrases. Explique pourquoi ce sujet est crucial pour le profil cible en t'appuyant directement sur le brief et les clarifications.
         
-        ## Concepts clés
-        Pour chaque concept : définition simple, analogie concrète, exemple d'usage.
+        ## Concepts clés / Piliers majeurs
+        Pour chaque concept ou pilier essentiel identifié : 
+        - Définition ou explication rigoureuse (appuyée sur le RAG)
+        - Analogie concrète pour vulgariser
+        - Exemple d'application réelle adapté au contexte de l'utilisateur.
         
-        ## Exemples concrets
-        Minimum 2 exemples détaillés et applicables immédiatement.
-        Si pertinent, inclure des blocs de code avec syntaxe correcte.
+        ## Exemples pratiques et Applications concrètes
+        Fournis au moins 2 exemples détaillés, réalistes et applicables immédiatement.
+        Selon la nature du sujet, inclus des livrables concrets (ex: templates, scripts, structures de messages, cas d'école vécus, simulations) avec des explications claires et commentées.
         
-        ## Exploration approfondie
-        Description complète des mécanismes, nuances et cas d'usage avancés.
+        ## Exploration approfondie / Analyse détaillée
+        Description complète des mécanismes sous-jacents, des nuances, des pièges à éviter, des limites et des cas d'usage avancés du sujet.
         
-        ## Mise en œuvre — Guide pas à pas
-        Étapes numérotées, précises et actionnables.
-        Chaque étape doit être suffisamment détaillée pour être suivie sans ambiguïté.
+        ## Guide de mise en œuvre / Plan d'action pas à pas
+        Étapes numérotées, précises et chronologiques pour mettre en pratique le sujet. Chaque étape doit être suffisamment détaillée pour être suivie sans ambiguïté par le lecteur.
         
         ## Points à retenir
-        5 à 7 points essentiels en bullet points.
+        5 à 7 points essentiels sous forme de liste à puces.
         
         ## Pour aller plus loin
-        2-3 ressources ou pistes d'approfondissement.
+        2-3 pistes d'approfondissement réelles, lectures, outils ou concepts connexes pour prolonger l'apprentissage.
         
         ## Mot de fin
-        Message d'encouragement personnalisé pour le profil cible identifié.
+        Message d'encouragement personnalisé et ciblé pour l'utilisateur et la réussite de son projet.
         
-        ## Contraintes de rédaction
-        - Ton : adapté au profil cible identifié dans le brief et l'analyse
-        - Utilise tout ce que Markdown permet : titres, bold, italic, code, tableaux, listes
-        - Chaque section doit avoir du contenu substantiel — pas de remplissage
-        - Les exemples de code doivent être corrects et fonctionnels
+        ## CONTRAINTES DE RÉDACTION SÉVÈRES
+        - Utilise toute la richesse du Markdown (titres, gras, italique, listes, tableaux comparatifs si pertinent).
+        - Interdiction absolue de meubler avec du texte générique : chaque paragraphe doit apporter une valeur concrète et tangible.
         """
     )
 
     return {"final_data": response.content}
 
-def create_markdown(state: BriefState):
-    content = state.get("final_data", "Aucun contenu généré.")
 
+def create_html(state: BriefState):
+    # 1. Extraction des données de l'état global du graphe
+    brief_initial = state.get("input", "N/A")
+    history = state.get("questions_answers", [])
+    raw_markdown = state.get("final_data", "")
+
+    # Récupération de la liste de chaînes (URLs) depuis le State
+    sources = state.get("sources", [])
+
+    # 2. Conversion du Markdown brut en éléments HTML via le parseur ligne par ligne
+    body_content_html = markdown_to_html(raw_markdown)
+
+    # 3. Injection dans le template HTML externe via string.Template
+    final_html_output = render_dashboard_template(
+        brief_initial=brief_initial,
+        history=history,
+        sources=sources,
+        body_content=body_content_html
+    )
+
+    # 4. Enregistrement sécurisé du fichier sur le disque (.html)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M")
     output_dir = "output"
     os.makedirs(output_dir, exist_ok=True)
-    filename = f"{output_dir}/brief_{timestamp}.md"
+    filename = f"{output_dir}/dashboard_{timestamp}.html"
 
     with open(filename, "w", encoding="utf-8") as f:
-        f.write(content)
+        f.write(final_html_output)
 
+    # On retourne le chemin du fichier pour que le graph ou main.py puisse le lire à la fin
     return {"result_path": filename}
