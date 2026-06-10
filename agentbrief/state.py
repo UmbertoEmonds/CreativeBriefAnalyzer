@@ -1,5 +1,6 @@
 import operator
-from typing import TypedDict, Annotated
+from typing import TypedDict, Annotated, List
+
 
 class QA(TypedDict):
     q: str
@@ -8,7 +9,8 @@ class QA(TypedDict):
 class BriefState(TypedDict):
     input: str
     analyse: str
-    questions_answers: Annotated[list[QA], operator.add]
+    questions_answers: Annotated[List[QA], operator.add]
     rag_result: str
     final_data: str
     result_path: str
+    sources: List[str]
