@@ -1,4 +1,4 @@
-fpdf2==2.8.7
+markdown==3.7
 langchain-community==0.4.1
 langchain-google-genai==4.2.2
 langchain-groq==1.1.2

@@ -1,7 +1,16 @@
+"""
+LangGraph graph definition for the ChatBotLangGraph brief analysis workflow.
+
+Defines the StateGraph topology: nodes for analysis, clarification,
+retrieval, generation, and HTML rendering, along with conditional
+edges for the clarification loop. The compiled graph is exported as
+the module-level `graph` object with in-memory checkpointing.
+"""
 from langchain_groq import ChatGroq
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import StateGraph
 from langgraph.graph import START, END
+from agentbrief.config import LLM_MODEL
 from agentbrief.routing import route_after_analysis, route_after_clarification
 from agentbrief.nodes import call_model, ask, retrieve, generate_final_data, create_html
 from agentbrief.state import BriefState
@@ -9,8 +18,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# LLM instance used across all nodes requiring language model inference.
-llm = ChatGroq(model="llama-3.3-70b-versatile")
+llm = ChatGroq(model=LLM_MODEL)
 
 # StateGraph builder configured with BriefState as the shared state schema.
 builder = StateGraph(BriefState)
@@ -35,9 +43,3 @@ builder.add_edge("generate", "create_html")
 builder.add_edge("create_html", END)
 
 graph = builder.compile(checkpointer=MemorySaver())
-"""
-    Compiled LangGraph graph with in-memory checkpointing.
-    
-    Supports interrupt/resume for human-in-the-loop clarification steps.
-    Thread-based state persistence is handled via the 'thread_id' config key.
-"""
