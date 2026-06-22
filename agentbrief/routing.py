@@ -1,4 +1,11 @@
+"""
+Conditional routing functions for the ChatBotLangGraph state graph.
+
+Determines whether to ask for more clarifications, proceed to
+retrieval, or terminate based on the current graph state.
+"""
 from agentbrief.state import BriefState
+from agentbrief.config import MAX_CLARIFICATION_QUESTIONS, STOPPING_PHRASES
 
 def route_after_analysis(state: BriefState) -> str:
     """
@@ -21,8 +28,7 @@ def route_after_analysis(state: BriefState) -> str:
     """
     qa = state.get("questions_answers", [])
 
-    # 4 questions limit
-    if len(qa) >= 4:
+    if len(qa) >= MAX_CLARIFICATION_QUESTIONS:
         return "retrieve"
 
     if "CLARIFICATION_NEEDED" in state.get("analyse", ""):
@@ -50,7 +56,6 @@ def route_after_clarification(state: BriefState) -> str:
     """
     last_qa = state.get("questions_answers", [])
 
-    # Check if the user wants to stop the clarification process
-    if last_qa and last_qa[-1]["r"].lower() in ["non", "stop", "ça suffit", "comme tu veux"]:
+    if last_qa and last_qa[-1]["r"].lower() in STOPPING_PHRASES:
         return "retrieve"
     return "call_model"
