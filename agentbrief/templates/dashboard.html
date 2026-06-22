@@ -390,7 +390,7 @@
 
         <div class="widget">
             <div class="widget-title">Sources consultées</div>
-            $sources_html
+            <div class="source-list" id="source-list"></div>
         </div>
     </aside>
 
@@ -419,5 +419,24 @@
         </div>
     </main>
 </div>
+<script>
+    (function() {
+        var sources = $sources_json;
+        var el = document.getElementById('source-list');
+        if (!el) return;
+        if (sources.length === 0) {
+            el.innerHTML = '<p class="sidebar-empty">Aucune source consult\u00e9e.</p>';
+            return;
+        }
+        var items = '';
+        for (var idx = 0; idx < sources.length; idx++) {
+            var url = sources[idx];
+            var safe = url.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            var display = url.length < 45 ? url : url.slice(0, 42) + '...';
+            items += '<a href="' + safe + '" class="source-link" target="_blank" title="' + safe + '">' + display + '</a>';
+        }
+        el.innerHTML = items;
+    })();
+</script>
 </body>
 </html>

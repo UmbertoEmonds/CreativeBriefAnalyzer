@@ -14,8 +14,12 @@ STOPPING_PHRASES = ["non", "stop", "ça suffit", "comme tu veux"]
 MAX_KEYWORDS = 5
 
 # Tavily search
-TAVILY_MAX_RESULTS = 10
+TAVILY_FETCH_SIZE = 15
+DESIRED_SOURCES = 10
 TAVILY_INPUT_LIMIT = 400
+
+# Blocked domains (scraping these is ineffective)
+BLOCKED_DOMAINS = ["youtube.com", "youtu.be", "instagram.com", "tiktok.com", "facebook.com"]
 
 # RAG / Scraping
 SCRAPE_TIMEOUT = 5

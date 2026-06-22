@@ -14,7 +14,7 @@ import os
 
 from agentbrief.templates import render_dashboard_template
 from agentbrief.utils.md_to_html import markdown_to_html
-from agentbrief.config import MAX_KEYWORDS, TAVILY_MAX_RESULTS, TAVILY_INPUT_LIMIT
+from agentbrief.config import MAX_KEYWORDS, TAVILY_FETCH_SIZE, DESIRED_SOURCES, TAVILY_INPUT_LIMIT, BLOCKED_DOMAINS
 
 
 _ANALYSIS_PROMPT = ChatPromptTemplate.from_messages([
@@ -193,10 +193,13 @@ def retrieve(state: BriefState, llm):
     )
     query_response = llm.invoke(messages)
 
-    tavily_tool = TavilySearch(max_results=TAVILY_MAX_RESULTS)
+    tavily_tool = TavilySearch(max_results=TAVILY_FETCH_SIZE)
 
     results = tavily_tool.invoke(query_response.content[:TAVILY_INPUT_LIMIT])
-    urls = [r["url"] for r in results["results"]]
+    urls = [
+        r["url"] for r in results["results"]
+        if not any(domain in r["url"] for domain in BLOCKED_DOMAINS)
+    ][:DESIRED_SOURCES]
 
     rag_result = build_retriever(urls, state["input"])
 
