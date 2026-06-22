@@ -29,7 +29,12 @@ Historique des clarifications : {history_plain}
 - NE TENTE JAMAIS de définir, de développer, d'interpréter ou de deviner le sens des acronymes, des sigles, du jargon ou des termes spécifiques au domaine du brief. Traite-les comme des concepts opaques sans chercher à les expliciter à ce stade.
 - Concentre-toi exclusivement sur la structure du besoin : Sait-on à QUI s'adresse ce projet ? Sait-on QUEL est le but précis recherché ?
 
-Si le brief manque d'informations fondamentales pour commencer la rédaction, commence ta réponse EXACTEMENT par le mot-clé : CLARIFICATION_NEEDED
+## GESTION DE L'HISTORIQUE DES CLARIFICATIONS :
+- Chaque question déjà posée et répondue dans l'historique doit être considérée comme une information désormais acquise, même si la réponse est partielle.
+- Si une information fondamentale (public cible, objectif, format) a déjà fait l'objet d'une question dans l'historique, ne la signale plus comme manquante.
+- Identifie UNIQUEMENT les informations fondamentales qui n'ont PAS encore été abordées dans l'historique.
+
+Si le brief manque d'informations fondamentales pour commencer la rédaction et que ces informations n'ont PAS encore été demandées dans l'historique, commence ta réponse EXACTEMENT par le mot-clé : CLARIFICATION_NEEDED
 Sinon, fais directement une analyse complète de la demande.""")
 ])
 

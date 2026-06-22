@@ -45,7 +45,7 @@ def render_dashboard_template(brief_initial: str, history: list, sources: List[s
     if sources:
         for url in sources:
             display_url = url if len(url) < 45 else url[:42] + "..."
-            sources_html += f'<a href="{url}" class="source-link" target="_blank" title="{url}">🔗 {display_url}</a>\n'
+            sources_html += f'<div><a href="{url}" class="source-link" target="_blank" title="{url}">{display_url}</a></div>\n'
     else:
         sources_html = '<p style="font-size: 9.5pt; color: #9ca3af;">Aucune source consultée.</p>'
 
