@@ -1,3 +1,10 @@
+"""
+Entry point for the ChatBotLangGraph brief analysis application.
+
+Prompts the user for a project brief, invokes the LangGraph workflow to
+analyze it, handles the interrupt/resume loop for clarification questions,
+and reports the path of the generated HTML fiche.
+"""
 import uuid
 
 from agentbrief.graph import graph

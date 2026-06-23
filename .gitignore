@@ -15,6 +15,9 @@ ENV/
 # Fichiers système Mac
 .DS_Store
 
+# Streamlit secrets (ne jamais commiter)
+.streamlit/secrets.toml
+
 # Outputs
 output/
 

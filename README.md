@@ -1,5 +1,9 @@
 # Agent Brief — AI-Powered Brief Analyzer
 
+<p align="center">
+  <img src="assets/demo.png" alt="Demo" width="700">
+</p>
+
 > A LangGraph-based AI agent that analyzes a brief, asks clarifying questions, runs a dynamic RAG pipeline, and generates a structured HTML dashboard.
 
 Built by **Umberto Emonds**
@@ -19,13 +23,14 @@ Built by **Umberto Emonds**
 ## Tech stack
 
 | Component | Technology |
-|---|---|
+|---|---|---|
 | Agent orchestration | LangGraph |
 | LLM | Groq — `llama-3.3-70b-versatile` |
 | Web search | Tavily |
 | Embeddings | HuggingFace — `all-MiniLM-L6-v2` |
 | Vector store | Chroma (ephemeral, per run) |
 | Scraping | requests + BeautifulSoup |
+| Web UI | Streamlit |
 | Output | HTML + CSS dashboard |
 
 ---
@@ -51,8 +56,14 @@ TAVILY_API_KEY=your_tavily_api_key
 
 ## Usage
 
+### CLI
 ```bash
 python main.py
+```
+
+### Web UI (Streamlit)
+```bash
+streamlit run streamlit_app.py
 ```
 
 ---
@@ -62,17 +73,26 @@ python main.py
 ```
 agent-brief/
 ├── agentbrief/
-│   ├── state.py        # BriefState and QA TypedDicts
-│   ├── nodes.py        # Graph node functions
-│   ├── graph.py        # Graph construction and compilation
-│   ├── routing.py      # Conditional edge routing
-│   ├── rag.py          # Dynamic RAG pipeline
-│   ├── templates.py    # HTML template rendering
-│   └── templates/
-│       └── dashboard.html
-├── main.py
-├── output/             # Generated dashboards (gitignored)
-├── .env                # API keys (gitignored)
+│   ├── state.py         # BriefState and QA TypedDicts
+│   ├── nodes.py         # Graph node functions + LLM prompts
+│   ├── graph.py         # Graph construction and compilation
+│   ├── routing.py       # Conditional edge routing
+│   ├── rag.py           # Dynamic RAG pipeline
+│   ├── config.py        # Configuration constants
+│   ├── templates.py     # HTML template rendering
+│   ├── templates/
+│   │   └── dashboard.html
+│   └── utils/
+│       └── md_to_html.py
+├── streamlit_app.py     # Streamlit web UI
+├── main.py              # CLI entry point
+├── assets/
+│   └── demo.png
+├── output/              # Generated dashboards (gitignored)
+├── .env                 # API keys (gitignored)
+├── .streamlit/
+│   └── config.toml
+├── AGENTS.md            # Agent conventions
 └── requirements.txt
 ```
 
