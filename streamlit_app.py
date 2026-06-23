@@ -186,6 +186,7 @@ if st.session_state.phase == "input":
     brief = st.text_area(
         "Decris ton brief (sujet) :",
         height=140,
+        max_chars=5000,
         placeholder=(
             "Exemple : Je dois former mon equipe de 5 personnes a la "
             "methode Scrum. Nous sommes une PME de 20 salaries dans "
