@@ -36,6 +36,7 @@ def render_dashboard_template(brief_initial: str, history: list, sources: List[s
                 <div class="history-q">Q: {item['q']}</div>
                 <div class="history-a">R: {item['r']}</div>
             </div>
+            <br>
             """
     else:
         history_html = '<p style="font-size: 9.5pt; color: #9ca3af;">Aucune clarification requise.</p>'
