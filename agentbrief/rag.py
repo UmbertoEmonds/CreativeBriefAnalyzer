@@ -14,9 +14,26 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from agentbrief.config import SCRAPE_TIMEOUT, MIN_TEXT_LENGTH, CHUNK_SIZE, CHUNK_OVERLAP, SIMILARITY_TOP_K
 
 
+_SOCIAL_DOMAINS = [
+    "youtube.com", "youtu.be",
+    "facebook.com", "instagram.com", "tiktok.com",
+    "twitter.com", "x.com",
+    "linkedin.com",
+    "reddit.com",
+    "pinterest.com",
+    "twitch.tv",
+]
+
+def _is_social_media(url: str) -> bool:
+    from urllib.parse import urlparse
+    domain = urlparse(url).netloc.lower()
+    domain = domain.removeprefix("www.")
+    return any(d in domain for d in _SOCIAL_DOMAINS)
+
 def build_retriever(urls: list[str], query: str):
     docs = []
 
+    urls = [u for u in urls if not _is_social_media(u)]
     print(f"   Scraping de {len(urls)} page(s)...")
     for url in urls:
         print(f"      {url}")

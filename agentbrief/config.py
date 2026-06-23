@@ -11,7 +11,7 @@ MAX_CLARIFICATION_QUESTIONS = 4
 STOPPING_PHRASES = ["non", "stop", "ça suffit", "comme tu veux"]
 
 # Keyword extraction
-MAX_KEYWORDS = 5
+MAX_KEYWORDS = 6
 
 # Tavily search
 TAVILY_MAX_RESULTS = 10

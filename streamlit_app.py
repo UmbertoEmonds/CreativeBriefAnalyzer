@@ -282,9 +282,10 @@ elif st.session_state.phase == "clarification":
 
     qid = str(abs(hash(st.session_state.question)) % 10_000_000)
 
-    st.text_input(
+    st.text_area(
         "Votre reponse :",
         key=f"clarification_{qid}",
+        height=70,
     )
 
     col1, col2 = st.columns([1, 4])
@@ -320,28 +321,20 @@ elif st.session_state.phase == "done":
 
         st.divider()
         st.subheader("Apercu du rapport")
-        st.markdown(
-            """
-            <style>
-            .report-frame iframe {
-                border: 2px solid #d1d5db !important;
-                border-radius: 12px !important;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.06) !important;
-                overflow: hidden;
-            }
-            </style>
-            <div class="report-frame"></div>
-            """,
-            unsafe_allow_html=True,
-        )
+        st.markdown("""
+        <style>
+        div[data-testid="stHtml"] {
+            border: 1px solid #000 !important;
+            border-radius: 12px !important;
+            overflow: hidden !important;
+        }
+        div[data-testid="stHtml"] iframe {
+            border-radius: 12px !important;
+        }
+        </style>
+        """, unsafe_allow_html=True)
         st.components.v1.html(
             st.session_state.html_content, height=800, scrolling=True
-        )
-
-    if st.session_state.result_path:
-        st.info(
-            f"Le fichier est egalement stocke sur le serveur sous "
-            f"`{st.session_state.result_path}`."
         )
 
     st.button("Nouvelle analyse", type="primary", on_click=reset_session)
