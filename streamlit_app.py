@@ -150,7 +150,7 @@ with st.sidebar:
 
     st.divider()
     st.caption(f"Session : `{st.session_state.thread_id[:8]}...`")
-    st.caption("(c) 2026 Umberto Emonds")
+    st.caption("© 2026 Umberto Emonds")
 
     if st.session_state.phase in ("done",):
         if st.button("Nouvelle analyse", use_container_width=True):
