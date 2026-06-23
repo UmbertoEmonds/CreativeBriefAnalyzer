@@ -15,26 +15,11 @@ from agentbrief.config import SCRAPE_TIMEOUT, MIN_TEXT_LENGTH, CHUNK_SIZE, CHUNK
 
 
 def build_retriever(urls: list[str], query: str):
-    """
-    Scrape content from a list of URLs, chunk and embed it, then return
-    the top-k similarity search results for the given query.
-
-    Uses BeautifulSoup for scraping, RecursiveCharacterTextSplitter for
-    chunking, HuggingFace embeddings with all-MiniLM-L6-v2, and Chroma
-    as the vector store.
-
-    Args:
-        urls: List of URLs to scrape and index.
-        query: The search query to retrieve relevant passages.
-
-    Returns:
-        str: Concatenated passages with source attribution, or a fallback
-             message if no content could be retrieved.
-    """
     docs = []
 
+    print(f"   Scraping de {len(urls)} page(s)...")
     for url in urls:
-        print(url)
+        print(f"      {url}")
         try:
             response = requests.get(url, timeout=SCRAPE_TIMEOUT)
             response.encoding = response.apparent_encoding
@@ -48,15 +33,18 @@ def build_retriever(urls: list[str], query: str):
             continue
 
     if not docs:
-        return "Aucun contenu récupéré."
+        return "Aucun contenu recupere."
 
+    print(f"   Decoupage en chunks...")
     splitter = RecursiveCharacterTextSplitter(chunk_size=CHUNK_SIZE, chunk_overlap=CHUNK_OVERLAP)
     chunks = splitter.split_documents(docs)
 
+    print(f"   Embeddings via HuggingFace (all-MiniLM-L6-v2)...")
     embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
     collection_name = f"brief_{uuid.uuid4().hex[:8]}"
     vectorstore = Chroma.from_documents(chunks, embeddings, collection_name=collection_name)
 
+    print(f"   Recherche de similarite (top {SIMILARITY_TOP_K})...")
     results = vectorstore.similarity_search(query, k=SIMILARITY_TOP_K)
 
     result = "\n\n".join([
