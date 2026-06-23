@@ -136,7 +136,7 @@ def call_model(state: BriefState, llm):
 
 def ask(state: BriefState, llm):
     print("Generation d'une question de clarification...")
-    messages = _QUESTION_PROMPT.format_messages(analyse=state["analyse"])
+    messages = _QUESTION_PROMPT.format_messages(analyse=state["analyse"], user_input=state["input"])
     question = llm.invoke(messages)
     approved = interrupt(question)
 
