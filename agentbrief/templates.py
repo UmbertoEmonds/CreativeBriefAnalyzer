@@ -4,6 +4,7 @@ HTML template rendering for the ChatBotLangGraph application.
 Loads the external dashboard.html skeleton and injects state data
 (brief, history, sources, body content) via string.Template.
 """
+import html
 import os
 from datetime import datetime
 from string import Template
@@ -33,8 +34,8 @@ def render_dashboard_template(brief_initial: str, history: list, sources: List[s
         for item in history:
             history_html += f"""
             <div class="history-item">
-                <div class="history-q">Q: {item['q']}</div>
-                <div class="history-a">R: {item['r']}</div>
+                <div class="history-q">Q: {html.escape(item['q'])}</div>
+                <div class="history-a">R: {html.escape(item['r'])}</div>
             </div>
             <br>
             """
@@ -45,8 +46,9 @@ def render_dashboard_template(brief_initial: str, history: list, sources: List[s
     sources_html = ""
     if sources:
         for url in sources:
-            display_url = url if len(url) < 45 else url[:42] + "..."
-            sources_html += f'<div><a href="{url}" class="source-link" target="_blank" title="{url}">{display_url}</a></div>\n'
+            safe_url = html.escape(url)
+            display_url = safe_url if len(safe_url) < 45 else safe_url[:42] + "..."
+            sources_html += f'<div><a href="{safe_url}" class="source-link" target="_blank" title="{safe_url}">{display_url}</a></div>\n'
     else:
         sources_html = '<p style="font-size: 9.5pt; color: #9ca3af;">Aucune source consultée.</p>'
 
@@ -66,7 +68,7 @@ def render_dashboard_template(brief_initial: str, history: list, sources: List[s
         "current_date_time": datetime.now().strftime('%d/%m/%Y à %H:%M'),
         "history_count": len(history),
         "nb_sources": len(sources),
-        "brief_initial": brief_initial,
+        "brief_initial": html.escape(brief_initial),
         "history_html": history_html,
         "sources_html": sources_html,
         "body_content": body_content

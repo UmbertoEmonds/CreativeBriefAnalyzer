@@ -4,7 +4,11 @@ RAG retrieval module for the ChatBotLangGraph application.
 Scrapes content from URLs, chunks it, embeds it with HuggingFace
 all-MiniLM-L6-v2, and performs similarity search via Chroma.
 """
+import ipaddress
+import socket
 import uuid
+from urllib.parse import urlparse
+
 import requests
 from bs4 import BeautifulSoup
 from langchain_huggingface import HuggingFaceEmbeddings
@@ -25,15 +29,25 @@ _SOCIAL_DOMAINS = [
 ]
 
 def _is_social_media(url: str) -> bool:
-    from urllib.parse import urlparse
     domain = urlparse(url).netloc.lower()
     domain = domain.removeprefix("www.")
     return any(d in domain for d in _SOCIAL_DOMAINS)
 
+def _is_private_url(url: str) -> bool:
+    hostname = urlparse(url).hostname
+    if not hostname:
+        return True
+    try:
+        addr = socket.getaddrinfo(hostname, None)[0][4][0]
+        ip = ipaddress.ip_address(addr)
+        return ip.is_private or ip.is_loopback or ip.is_link_local
+    except Exception:
+        return True
+
 def build_retriever(urls: list[str], query: str):
     docs = []
 
-    urls = [u for u in urls if not _is_social_media(u)]
+    urls = [u for u in urls if not _is_social_media(u) and not _is_private_url(u)]
     print(f"   Scraping de {len(urls)} page(s)...")
     for url in urls:
         print(f"      {url}")

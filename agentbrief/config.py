@@ -14,7 +14,7 @@ STOPPING_PHRASES = ["non", "stop", "ça suffit", "comme tu veux"]
 MAX_KEYWORDS = 6
 
 # Tavily search
-TAVILY_MAX_RESULTS = 10
+TAVILY_MAX_RESULTS = 15
 TAVILY_INPUT_LIMIT = 400
 
 # RAG / Scraping
