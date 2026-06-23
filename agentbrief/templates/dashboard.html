@@ -246,12 +246,14 @@
 
         .content-card ul,
         .content-card ol {
-            margin: .75rem 0 1rem 1.25rem;
+            margin: .75rem 0 1rem 0;
+            padding-left: 1.75rem;
             font-size: .92rem;
             color: #334155;
         }
 
-        .content-card li { margin-bottom: .35rem; }
+        .content-card li { margin-bottom: .6rem; line-height: 1.7; }
+        .content-card li:last-child { margin-bottom: 0; }
 
         .content-card strong { color: var(--text); font-weight: 600; }
         .content-card em { color: var(--text-muted); }
@@ -260,6 +262,7 @@
 
         .content-card table {
             width: 100%;
+            table-layout: auto;
             border-collapse: collapse;
             margin: 1rem 0 1.5rem;
             font-size: .85rem;

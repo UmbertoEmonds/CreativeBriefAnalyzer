@@ -6,7 +6,7 @@ retrieval, generation, and HTML rendering, along with conditional
 edges for the clarification loop. The compiled graph is exported as
 the module-level `graph` object with in-memory checkpointing.
 """
-from langchain_groq import ChatGroq
+from langchain_mistralai import ChatMistralAI
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import StateGraph
 from langgraph.graph import START, END
@@ -18,7 +18,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-llm = ChatGroq(model=LLM_MODEL)
+llm = ChatMistralAI(model=LLM_MODEL)
 
 # StateGraph builder configured with BriefState as the shared state schema.
 builder = StateGraph(BriefState)

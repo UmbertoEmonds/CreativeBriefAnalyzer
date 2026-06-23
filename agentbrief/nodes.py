@@ -77,7 +77,7 @@ Tu es un expert en ingenierie pedagogique et un redacteur senior de premier ordr
 {rag_result}
 
 ## DIRECTIVES CRITIQUES ANTI-HALLUCINATION
-1. ANCRAGE STRICT AUX FAITS : Toutes les definitions, donnees, caracteristiques ou methodologies propres au sujet DOIVENT etre extraites ou validees par les "Informations issues du RAG". Si une information cruciale n'est pas presente, ne l'invente pas. Prefere rester factuel. Cite chaque source RAG entre parentheses (Source: url) a chaque fois que tu utilises un fait issu du RAG.
+1. ANCRAGE STRICT AUX FAITS : Toutes les definitions, donnees, caracteristiques ou methodologies propres au sujet DOIVENT etre extraites ou validees par les "Informations issues du RAG". Si une information cruciale n'est pas presente, ne l'invente pas. Prefere rester factuel.
 2. PAS D'IMPROVISATION DE CONTENU : Ne cree jamais de faux exemples magiques, de fausses statistiques ou des elements imaginaires pour simplifier ton explication. Tout exemple doit refleter la realite concrete du domaine aborde.
 3. ADAPTATION AU PROFIL : Utilise les "Clarifications obtenues" pour aligner precisement la complexite, le vocabulaire et les exemples de la fiche avec le profil et les besoins reels formules par l'utilisateur.
 
@@ -93,19 +93,19 @@ Ne genere PAS de preambule ni de meta-commentaires (commence directement au titr
 Contexte et enjeux en 3-4 phrases. Explique pourquoi ce sujet est crucial pour le profil cible.
 
 ## Concepts cles / Piliers majeurs
-Pour chaque concept ou pilier essentiel identifie : definition rigoureuse (appuyee sur le RAG), analogie concrete pour vulgariser, puis un exemple court. NE donne pas ici d'exemples detailles deployee.
+Sous forme d'UN SEUL tableau avec 4 colonnes : Concept | Definition | Analogie concrete | Exemple court. Sois synthetique (2-3 phrases max par case).
 
 ## Exemples pratiques et Applications concretes
 Fournis au moins 2 exemples detailles, realistes, entierement differents de ceux esquisses dans la section Concepts cles. Si pertinent, inclus templates, scripts, ou cas d'ecole commentes.
 
 ## Exploration approfondie / Analyse detaillee
-Description complete des mecanismes sous-jacents, des nuances, des pieges a eviter, des limites et des cas d'usage avances du sujet.
+Decoupe en sous-sections avec des titres. Explore mecanismes, nuances, pieges, cas d'usage avances.
 
 ## Guide de mise en oeuvre / Plan d'action pas a pas
-Etapes numerotees, precises et chronologiques pour mettre en pratique le sujet.
+Etapes numerotees, precises et chronologiques. Chaque etape sur SA PROPRE LIGNE.
 
 ## Points a retenir
-5 a 7 points essentiels sous forme de liste a puces.
+5 a 7 points, chaque point sur SA PROPRE LIGNE, commencant par `-` ou `*`.
 
 ## Pour aller plus loin
 2-3 pistes d'approfondissement reelles, lectures, outils ou concepts connexes.
@@ -114,8 +114,28 @@ Etapes numerotees, precises et chronologiques pour mettre en pratique le sujet.
 Message d'encouragement personnalise et cible pour l'utilisateur.
 
 ## CONTRAINTES DE REDACTION SEVERES
-- Utilise toute la richesse du Markdown (titres, gras, italique, listes, extrait de code, tableaux comparatifs si pertinent).
-- Interdiction absolue de meubler avec du texte generique : chaque paragraphe doit apporter une valeur concrete et tangible.""")
+- Utilise des TABLEAUX des que possible (notamment Concepts cles, comparaisons, mise en oeuvre).
+- Sois SYNTHETIQUE : phrases courtes. Chaque phrase doit apporter une valeur concrete.
+- Les sous-sections doivent utiliser des titres Markdown, jamais du texte suivi de `:`.
+- Interdiction absolue de meubler avec du texte generique.
+ 
+## REGLES MARKDOWN STRICTES — OBLIGATOIRES
+- CODE INLINE : n'utilise JAMAIS les backticks simples (`) pour entourer du texte ordinaire, 
+  des phrases ou des items de liste. Les backticks simples sont UNIQUEMENT pour du code 
+  (`variable`, `function()`, `SELECT *`). 
+  INTERDIT : `- Mon point à retenir.`
+  CORRECT  : - Mon point à retenir.
+- LISTES : chaque item DOIT etre sur SA PROPRE LIGNE, commence par `- ` ou `1. `.
+  INTERDIT : "Intro : - item A - item B" sur une seule ligne.
+  CORRECT :
+  Intro :
+  - item A
+  - item B
+- LISTES NUMEROTEES : numeroter en continu (1, 2, 3, 4…). Ne jamais reprendre a 1 au milieu.
+- SECTION "Points a retenir" : chaque point DOIT commencer par `- ` ou `* `.
+  INTERDIT : une phrase seule sur sa ligne sans tiret.
+  CORRECT : `- Les cycles iteratifs permettent de livrer plus rapidement.`
+- SEPARATEURS : utiliser `---` seul sur sa ligne pour les separateurs horizontaux.""")
 ])
 
 
@@ -135,7 +155,6 @@ def call_model(state: BriefState, llm):
 
 
 def ask(state: BriefState, llm):
-    print("Generation d'une question de clarification...")
     messages = _QUESTION_PROMPT.format_messages(analyse=state["analyse"], user_input=state["input"])
     question = llm.invoke(messages)
     approved = interrupt(question)
