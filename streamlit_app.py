@@ -144,6 +144,9 @@ if st.session_state.phase == "input":
         }
         </style>
         <div class="big-title">Analyseur de <span>Brief</span></div>
+        <div style="font-size: 1rem; font-weight: 500; color: #4f46e5; margin-bottom: 0.5rem;">
+            Planifiez, organisez puis atteignez tous vos objectifs.
+        </div>
         <div class="sub-title">
             Décris ton projet, besoin ou sujet (formation, marketing,
             stratégie, contenu technique…). L'IA analyse, clarifie
