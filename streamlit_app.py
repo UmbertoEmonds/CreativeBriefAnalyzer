@@ -145,7 +145,7 @@ if st.session_state.phase == "input":
         </style>
         <div class="big-title">Analyseur de <span>Brief</span></div>
         <div style="font-size: 1rem; font-weight: 500; color: #4f46e5; margin-bottom: 0.5rem;">
-            Planifiez, organisez puis atteignez tous vos objectifs.
+            Planifie, organise puis atteint tous tes objectifs.
         </div>
         <div class="sub-title">
             Décris ton projet, besoin ou sujet (formation, marketing,
@@ -156,6 +156,91 @@ if st.session_state.phase == "input":
         """,
         unsafe_allow_html=True,
     )
+
+    with st.expander("Comment ça marche ?", expanded=False):
+        st.markdown(
+            """
+            <style>
+            .tuto-step { margin-bottom: 1rem; }
+            .tuto-step strong { color: #4f46e5; }
+            .tuto-icon { font-size: 1.2rem; margin-right: 0.4rem; }
+            .tuto-box {
+                background: #f8fafc; border-left: 4px solid #4f46e5;
+                padding: 0.75rem 1rem; border-radius: 0 8px 8px 0;
+                margin: 0.75rem 0; font-size: 0.9rem;
+            }
+            .tuto-problem {
+                background: #fef2f2; border-left: 4px solid #ef4444;
+                padding: 0.75rem 1rem; border-radius: 0 8px 8px 0;
+                margin: 0.75rem 0; font-size: 0.9rem;
+            }
+            .tuto-solution {
+                background: #f0fdf4; border-left: 4px solid #22c55e;
+                padding: 0.75rem 1rem; border-radius: 0 8px 8px 0;
+                margin: 0.75rem 0; font-size: 0.9rem;
+            }
+            </style>
+
+            <div style="font-size: 0.95rem;">
+
+            **À quoi sert cette application ?**
+
+            <div class="tuto-problem">
+            <strong>Le problème :</strong> Rédiger un brief clair et structuré
+            prend du temps. On oublie des points clés, on ne sait pas par où
+            commencer, et le résultat est souvent trop vague pour être
+            exploitable par une équipe.
+            </div>
+
+            <div class="tuto-solution">
+            <strong>La solution :</strong> Notre agent IA analyse ton brief,
+            pose des questions si nécessaire, fait des recherches web et génère
+            une fiche pédagogique complète et structurée au format HTML.
+            </div>
+
+            <hr style="margin: 1rem 0; border: none; border-top: 1px solid #e2e8f0;">
+
+            <div class="tuto-step">
+            <span class="tuto-icon"></span> <strong>1. Rédige ton brief</strong><br>
+            Décris ton projet, besoin ou sujet en quelques lignes.
+            </div>
+
+            <div class="tuto-step">
+            <span class="tuto-icon"></span> <strong>2. Analyse IA</strong><br>
+            L'IA étudie ton brief, identifie les points forts et les lacunes.
+            </div>
+
+            <div class="tuto-step">
+            <span class="tuto-icon"></span> <strong>3. Questions
+            (si nécessaire)</strong><br>
+            Si des points sont flous, l'IA te demande des précisions.
+            Tu peux répondre ou passer directement à la suite.
+            </div>
+
+            <div class="tuto-step">
+            <span class="tuto-icon"></span> <strong>4. Recherche web
+            + RAG</strong><br>
+            L'agent cherche du contenu pertinent sur le web et
+            dans sa base de connaissances.
+            </div>
+
+            <div class="tuto-step">
+            <span class="tuto-icon"></span> <strong>5. Fiche HTML
+            structurée</strong><br>
+            Tout est synthétisé dans un rapport pédagogique
+            prêt à être téléchargé et partagé.
+            </div>
+
+            <div class="tuto-box">
+            <strong>Idéal pour :</strong> formations, briefs marketing,
+            stratégies produit, contenus techniques, brainstorming, projets
+            d'équipe…
+            </div>
+
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
     brief = st.text_area(
         "Décris ton brief :",
@@ -247,7 +332,7 @@ elif st.session_state.phase == "processing":
         st.session_state.result_path = path
 
     st.session_state.phase = "done"
-    status_box.update(label="Analyse terminee", state="complete", expanded=False)
+    status_box.update(label="Analyse terminée", state="complete", expanded=False)
     st.rerun()
 
 elif st.session_state.phase == "clarification":
@@ -278,7 +363,7 @@ elif st.session_state.phase == "clarification":
                 st.warning("Veuillez entrer une reponse.")
 
 elif st.session_state.phase == "done":
-    st.success("**Analyse terminee avec succes !**")
+    st.success("**Analyse terminée avec succes !**")
 
     if st.session_state.logs:
         with st.expander("Voir les logs d'execution (URLs, RAG, ...)", expanded=False):
