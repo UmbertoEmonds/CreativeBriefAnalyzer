@@ -1,8 +1,4 @@
-# Agent Brief — AI-Powered Brief Analyzer
-
-<p align="center">
-  <img src="assets/demo.png" alt="Demo" width="700">
-</p>
+# Analyseur de Brief — AI-Powered Brief Analyzer
 
 > A LangGraph-based AI agent that analyzes a brief, asks clarifying questions, runs a dynamic RAG pipeline, and generates a structured HTML dashboard.
 
@@ -23,13 +19,14 @@ Built by **Umberto Emonds**
 ## Tech stack
 
 | Component | Technology |
-|---|---|---|
+|---|---|
 | Agent orchestration | LangGraph |
-| LLM | Groq — `llama-3.3-70b-versatile` |
+| LLM | Mistral (`mistral-small-latest`, configurable via `LLM_MODEL`) |
 | Web search | Tavily |
 | Embeddings | HuggingFace — `all-MiniLM-L6-v2` |
 | Vector store | Chroma (ephemeral, per run) |
 | Scraping | requests + BeautifulSoup |
+| Markdown > HTML | mistune |
 | Web UI | Streamlit |
 | Output | HTML + CSS dashboard |
 
@@ -48,7 +45,7 @@ pip install -r requirements.txt
 Create a `.env` file at the root:
 
 ```env
-GROQ_API_KEY=your_groq_api_key
+MISTRAL_API_KEY=your_mistral_api_key
 TAVILY_API_KEY=your_tavily_api_key
 ```
 
@@ -88,11 +85,11 @@ agent-brief/
 ├── main.py              # CLI entry point
 ├── assets/
 │   └── demo.png
-├── output/              # Generated dashboards (gitignored)
+├── output/              # Generated dashboards (gitignored, max 20 kept)
 ├── .env                 # API keys (gitignored)
 ├── .streamlit/
 │   └── config.toml
-├── AGENTS.md            # Agent conventions
+├── AGENTS.md            # AI assistant conventions (opencode)
 └── requirements.txt
 ```
 
@@ -113,3 +110,19 @@ START → call_model → more (optional loop) → retrieve → generate → crea
 | `create_html` | Exports as a styled HTML dashboard |
 
 ---
+
+## Configuration
+
+Key constants in `agentbrief/config.py`:
+
+| Constant | Default | Description |
+|---|---|---|
+| `LLM_MODEL` | `mistral-small-latest` | LLM model (set via `LLM_MODEL` env var) |
+| `MAX_CLARIFICATION_QUESTIONS` | 3 | Max clarification rounds |
+| `MAX_KEYWORDS` | 6 | Max keywords for Tavily search |
+| `TAVILY_MAX_RESULTS` | 15 | URLs returned by Tavily |
+| `SCRAPE_TIMEOUT` | 5s | HTTP timeout per scraped URL |
+| `CHUNK_SIZE` | 1000 | RAG chunk size (characters) |
+| `CHUNK_OVERLAP` | 100 | RAG chunk overlap |
+| `SIMILARITY_TOP_K` | 5 | Top-k results from Chroma |
+| `MAX_OUTPUT_FILES` | 20 | Max dashboard files kept in `output/` |
