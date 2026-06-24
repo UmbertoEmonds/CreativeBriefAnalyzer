@@ -1,11 +1,4 @@
-"""
-LangGraph graph definition for the ChatBotLangGraph brief analysis workflow.
-
-Defines the StateGraph topology: nodes for analysis, clarification,
-retrieval, generation, and HTML rendering, along with conditional
-edges for the clarification loop. The compiled graph is exported as
-the module-level `graph` object with in-memory checkpointing.
-"""
+"""LangGraph StateGraph definition for the brief analysis workflow."""
 from langchain_mistralai import ChatMistralAI
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import StateGraph
@@ -20,18 +13,13 @@ load_dotenv()
 
 llm = ChatMistralAI(model=LLM_MODEL)
 
-# StateGraph builder configured with BriefState as the shared state schema.
 builder = StateGraph(BriefState)
-
-# --- Nodes ---
 
 builder.add_node("call_model", lambda state: call_model(state, llm))
 builder.add_node("more", lambda state: ask(state, llm))
 builder.add_node("retrieve", lambda state: retrieve(state, llm))
 builder.add_node("generate", lambda state: generate_final_data(state, llm))
 builder.add_node("create_html", create_html)
-
-# --- Edges ---
 
 builder.add_edge(START, "call_model")
 

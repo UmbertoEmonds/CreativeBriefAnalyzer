@@ -1,9 +1,4 @@
-"""
-Graph node implementations for the ChatBotLangGraph brief analysis workflow.
-
-Each function corresponds to a node in the LangGraph state graph:
-call_model, ask, retrieve, generate_final_data, and create_html.
-"""
+"""Graph node implementations: call_model, ask, retrieve, generate_final_data, create_html."""
 from langgraph.types import interrupt
 from langchain_core.prompts import ChatPromptTemplate
 from agentbrief.rag import build_retriever
@@ -14,7 +9,7 @@ import os
 
 from agentbrief.templates import render_dashboard_template
 from agentbrief.utils.md_to_html import markdown_to_html
-from agentbrief.config import MAX_KEYWORDS, TAVILY_MAX_RESULTS, TAVILY_INPUT_LIMIT
+from agentbrief.config import MAX_KEYWORDS, TAVILY_MAX_RESULTS, TAVILY_INPUT_LIMIT, MAX_OUTPUT_FILES
 
 
 _ANALYSIS_PROMPT = ChatPromptTemplate.from_messages([
@@ -140,6 +135,7 @@ Message d'encouragement personnalise et cible pour l'utilisateur.
 
 
 def call_model(state: BriefState, llm):
+    """Analyze the brief with the LLM and determine if clarifications are needed."""
     user_input = state["input"]
     history_plain = ""
 
@@ -150,32 +146,49 @@ def call_model(state: BriefState, llm):
         user_input=user_input, history_plain=history_plain
     )
     print("Analyse du brief par l'IA...")
-    response = llm.invoke(messages)
-    return {"analyse": response.content}
+    try:
+        response = llm.invoke(messages)
+        return {"analyse": response.content}
+    except Exception as e:
+        print(f"   Erreur LLM : {e}")
+        return {"analyse": f"Erreur lors de l'analyse : {e}"}
 
 
 def ask(state: BriefState, llm):
-    messages = _QUESTION_PROMPT.format_messages(analyse=state["analyse"], user_input=state["input"])
-    question = llm.invoke(messages)
-    approved = interrupt(question)
+    """Pause the graph via interrupt to ask the user a clarification question."""
+    try:
+        messages = _QUESTION_PROMPT.format_messages(analyse=state["analyse"], user_input=state["input"])
+        question = llm.invoke(messages)
+    except Exception as e:
+        print(f"   Erreur LLM lors de la question : {e}")
+        return {"questions_answers": [QA(q=f"Erreur : {e}", r="")]}
 
+    approved = interrupt(question)
     return {"questions_answers": [QA(q=question.content, r=approved)]}
 
 
 def retrieve(state: BriefState, llm):
-    messages = _KEYWORD_PROMPT.format_messages(
-        user_input=state["input"], max_keywords=MAX_KEYWORDS
-    )
-    print("Extraction des mots-cles...")
-    query_response = llm.invoke(messages)
-    print(f"   Mots-cles : {query_response.content}")
+    """Extract keywords, search the web with Tavily, and run RAG retrieval."""
+    try:
+        messages = _KEYWORD_PROMPT.format_messages(
+            user_input=state["input"], max_keywords=MAX_KEYWORDS
+        )
+        print("Extraction des mots-cles...")
+        query_response = llm.invoke(messages)
+        print(f"   Mots-cles : {query_response.content}")
+    except Exception as e:
+        print(f"   Erreur extraction mots-cles : {e}")
+        return {"rag_result": f"Erreur extraction mots-cles : {e}", "sources": []}
 
     print("Recherche web via Tavily...")
-    tavily_tool = TavilySearch(max_results=TAVILY_MAX_RESULTS)
-
-    results = tavily_tool.invoke(query_response.content[:TAVILY_INPUT_LIMIT])
-    urls = [r["url"] for r in results["results"]]
-    print(f"   {len(urls)} URL(s) trouvee(s)")
+    try:
+        tavily_tool = TavilySearch(max_results=TAVILY_MAX_RESULTS)
+        results = tavily_tool.invoke(query_response.content[:TAVILY_INPUT_LIMIT])
+        urls = [r["url"] for r in results["results"]]
+        print(f"   {len(urls)} URL(s) trouvee(s)")
+    except Exception as e:
+        print(f"   Erreur recherche web : {e}")
+        return {"rag_result": f"Erreur recherche web : {e}", "sources": []}
 
     rag_result = build_retriever(urls, state["input"])
 
@@ -186,6 +199,7 @@ def retrieve(state: BriefState, llm):
 
 
 def generate_final_data(state: BriefState, llm):
+    """Generate the final markdown fiche using the LLM with all gathered context."""
     print("Redaction de la fiche pedagogique par l'IA...")
     messages = _FINAL_PROMPT.format_messages(
         user_input=state["input"],
@@ -193,12 +207,29 @@ def generate_final_data(state: BriefState, llm):
         questions_answers=state["questions_answers"],
         rag_result=state["rag_result"],
     )
-    response = llm.invoke(messages)
+    try:
+        response = llm.invoke(messages)
+        return {"final_data": response.content}
+    except Exception as e:
+        print(f"   Erreur LLM lors de la generation : {e}")
+        return {"final_data": f"# Erreur lors de la generation\n\nImpossible de generer la fiche : {e}"}
 
-    return {"final_data": response.content}
+
+def _cleanup_output_dir(output_dir: str, max_files: int):
+    """Remove oldest files in output_dir when count exceeds max_files."""
+    try:
+        files = sorted(
+            [os.path.join(output_dir, f) for f in os.listdir(output_dir) if f.endswith(".html")],
+            key=os.path.getmtime,
+        )
+        while len(files) > max_files:
+            os.remove(files.pop(0))
+    except Exception:
+        pass
 
 
 def create_html(state: BriefState):
+    """Convert the markdown fiche to HTML and write it to the output directory."""
     print("Generation du fichier HTML...")
     brief_initial = state.get("input", "N/A")
     history = state.get("questions_answers", [])
@@ -217,10 +248,16 @@ def create_html(state: BriefState):
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M")
     output_dir = "output"
-    os.makedirs(output_dir, exist_ok=True)
-    filename = f"{output_dir}/dashboard_{timestamp}.html"
+    try:
+        os.makedirs(output_dir, exist_ok=True)
+        filename = f"{output_dir}/dashboard_{timestamp}.html"
 
-    with open(filename, "w", encoding="utf-8") as f:
-        f.write(final_html_output)
+        with open(filename, "w", encoding="utf-8") as f:
+            f.write(final_html_output)
 
-    return {"result_path": filename}
+        _cleanup_output_dir(output_dir, MAX_OUTPUT_FILES)
+
+        return {"result_path": filename}
+    except Exception as e:
+        print(f"   Erreur ecriture fichier : {e}")
+        return {"result_path": f"Erreur : {e}"}

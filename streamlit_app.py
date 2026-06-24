@@ -1,6 +1,4 @@
-"""
-Streamlit web UI for the ChatBotLangGraph brief analysis application.
-"""
+"""Streamlit web UI for the ChatBotLangGraph brief analysis application."""
 import streamlit as st
 import uuid
 import io
@@ -17,8 +15,6 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
-
-# ── Loading splash (visible during subsequent import / cold start) ──
 
 if "splash_done" not in st.session_state:
     st.markdown(
@@ -57,15 +53,13 @@ if "splash_done" not in st.session_state:
     st.rerun()
 
 
-# ── Heavy imports (after splash) ─────────────────────────────────────
-
 from langgraph.types import Command
 from agentbrief.graph import graph
 
 
-# ── Custom stdout capture for live streaming ─────────────────────────
-
 class LiveLogCapture(io.StringIO):
+    """Capture stdout in a thread-safe queue for live streaming to the UI."""
+
     def __init__(self):
         super().__init__()
         self._queue = queue.Queue()
@@ -87,8 +81,6 @@ class LiveLogCapture(io.StringIO):
                 break
         return entries
 
-
-# ── Session-state defaults ───────────────────────────────────────────
 
 _DEFAULTS = {
     "thread_id": lambda: str(uuid.uuid4()),
@@ -123,11 +115,13 @@ _FOOTER_HTML = """
 
 
 def reset_session():
+    """Clear all session state to start a new analysis."""
     for key in list(st.session_state.keys()):
         del st.session_state[key]
 
 
 def run_graph_in_thread(graph_input, config, capture, result_holder, error_holder):
+    """Invoke the LangGraph in a background thread, capturing stdout."""
     try:
         with contextlib.redirect_stdout(capture):
             result = graph.invoke(graph_input, config=config)
@@ -136,31 +130,6 @@ def run_graph_in_thread(graph_input, config, capture, result_holder, error_holde
         error_holder.append(exc)
 
 
-# ── Sidebar ──────────────────────────────────────────────────────────
-
-with st.sidebar:
-    st.markdown("### Journal d'execution")
-    log_container = st.container()
-    with log_container:
-        if st.session_state.logs:
-            for entry in st.session_state.logs:
-                st.code(entry, language="", line_numbers=False)
-        else:
-            st.caption("Les logs apparaitront ici en temps reel.")
-
-    st.divider()
-    st.caption(f"Session : `{st.session_state.thread_id[:8]}...`")
-    st.caption("© 2026 Umberto Emonds")
-
-    if st.session_state.phase in ("done",):
-        if st.button("Nouvelle analyse", use_container_width=True):
-            reset_session()
-            st.rerun()
-
-
-# ── Main content ─────────────────────────────────────────────────────
-
-# INPUT
 if st.session_state.phase == "input":
     st.markdown(
         """
@@ -176,17 +145,19 @@ if st.session_state.phase == "input":
         </style>
         <div class="big-title">Analyseur de <span>Brief</span></div>
         <div class="sub-title">
-            Decris ton projet, nous l'analysons et generons une fiche
-            pedagogique HTML structuree.
+            Décris ton projet, besoin ou sujet (formation, marketing,
+            stratégie, contenu technique…). L'IA analyse, clarifie
+            si nécessaire, recherche du contenu, et génère une
+            fiche structurée en HTML.
         </div>
         """,
         unsafe_allow_html=True,
     )
 
     brief = st.text_area(
-        "Decris ton brief (sujet) :",
+        "Décris ton brief :",
         height=140,
-        max_chars=5000,
+        max_chars=2000,
         placeholder=(
             "Exemple : Je dois former mon equipe de 5 personnes a la "
             "methode Scrum. Nous sommes une PME de 20 salaries dans "
@@ -204,7 +175,6 @@ if st.session_state.phase == "input":
             else:
                 st.error("Veuillez entrer un brief avant de lancer l'analyse.")
 
-# PROCESSING
 elif st.session_state.phase == "processing":
     st.subheader("Analyse en cours...")
 
@@ -277,9 +247,13 @@ elif st.session_state.phase == "processing":
     status_box.update(label="Analyse terminee", state="complete", expanded=False)
     st.rerun()
 
-# CLARIFICATION
 elif st.session_state.phase == "clarification":
     st.info(f"**Question de clarification :**\n\n{st.session_state.question}")
+
+    st.caption(
+        "💡 Tu peux répondre « non », « stop », « ça suffit » ou « comme tu veux » "
+        "pour passer directement à la génération de la fiche."
+    )
 
     qid = str(abs(hash(st.session_state.question)) % 10_000_000)
 
@@ -300,7 +274,6 @@ elif st.session_state.phase == "clarification":
             else:
                 st.warning("Veuillez entrer une reponse.")
 
-# DONE
 elif st.session_state.phase == "done":
     st.success("**Analyse terminee avec succes !**")
 
@@ -310,8 +283,12 @@ elif st.session_state.phase == "done":
                 st.code(entry, language="")
 
     if st.session_state.html_content:
-        col_left, col_right = st.columns([1, 1])
-        with col_left:
+        st.markdown(
+            "<style>div[data-testid='stDownloadButton'] button { background-color: #7c3aed !important; color: white !important; }</style>",
+            unsafe_allow_html=True,
+        )
+        col1, col2, col3 = st.columns([1, 2, 1])
+        with col2:
             st.download_button(
                 "Telecharger le rapport HTML",
                 data=st.session_state.html_content,
@@ -339,7 +316,5 @@ elif st.session_state.phase == "done":
         )
 
     st.button("Nouvelle analyse", type="primary", on_click=reset_session)
-
-# ── Footer ───────────────────────────────────────────────────────────
 
 st.markdown(_FOOTER_HTML, unsafe_allow_html=True)
