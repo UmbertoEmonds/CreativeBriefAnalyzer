@@ -136,28 +136,6 @@ def run_graph_in_thread(graph_input, config, capture, result_holder, error_holde
         error_holder.append(exc)
 
 
-# ── Sidebar ──────────────────────────────────────────────────────────
-
-with st.sidebar:
-    st.markdown("### Journal d'execution")
-    log_container = st.container()
-    with log_container:
-        if st.session_state.logs:
-            for entry in st.session_state.logs:
-                st.code(entry, language="", line_numbers=False)
-        else:
-            st.caption("Les logs apparaitront ici en temps reel.")
-
-    st.divider()
-    st.caption(f"Session : `{st.session_state.thread_id[:8]}...`")
-    st.caption("© 2026 Umberto Emonds")
-
-    if st.session_state.phase in ("done",):
-        if st.button("Nouvelle analyse", use_container_width=True):
-            reset_session()
-            st.rerun()
-
-
 # ── Main content ─────────────────────────────────────────────────────
 
 # INPUT
@@ -176,15 +154,17 @@ if st.session_state.phase == "input":
         </style>
         <div class="big-title">Analyseur de <span>Brief</span></div>
         <div class="sub-title">
-            Decris ton projet, nous l'analysons et generons une fiche
-            pedagogique HTML structuree.
+            Décris ton projet, besoin ou sujet (formation, marketing,
+            stratégie, contenu technique…). L'IA analyse, clarifie
+            si nécessaire, recherche du contenu, et génère une
+            fiche structurée en HTML.
         </div>
         """,
         unsafe_allow_html=True,
     )
 
     brief = st.text_area(
-        "Decris ton brief (sujet) :",
+        "Décris ton brief :",
         height=140,
         max_chars=5000,
         placeholder=(
