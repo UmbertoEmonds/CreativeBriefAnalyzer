@@ -8,6 +8,8 @@ import queue
 import time
 import json
 import os
+from collections import deque
+from agentbrief.config import MAX_INPUT_LENGTH
 
 st.set_page_config(
     page_title="Analyseur de Brief",
@@ -15,6 +17,25 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
+
+# --- Rate limiter ---
+_RATE_WINDOW = 60.0
+_RATE_MAX_GLOBAL = 10
+_RATE_MAX_PER_SESSION = 5
+_hit_timestamps: deque = deque()
+
+def _check_rate_limit():
+    now = time.time()
+    while _hit_timestamps and now - _hit_timestamps[0] > _RATE_WINDOW:
+        _hit_timestamps.popleft()
+    if len(_hit_timestamps) >= _RATE_MAX_GLOBAL:
+        st.error(f"Trop d'analyses en cours. Réessaie dans quelques instants.")
+        return False
+    session_count = st.session_state.get("_rate_count", 0)
+    if session_count >= _RATE_MAX_PER_SESSION:
+        st.error(f"Limite de {_RATE_MAX_PER_SESSION} analyses par session atteinte.")
+        return False
+    return True
 
 if "splash_done" not in st.session_state:
     st.markdown(
@@ -91,6 +112,7 @@ _DEFAULTS = {
     "answer": "",
     "html_content": None,
     "result_path": None,
+    "_rate_count": 0,
 }
 
 for key, val in _DEFAULTS.items():
@@ -116,8 +138,10 @@ _FOOTER_HTML = """
 
 def reset_session():
     """Clear all session state to start a new analysis."""
+    keep = {"_rate_count"}
     for key in list(st.session_state.keys()):
-        del st.session_state[key]
+        if key not in keep:
+            del st.session_state[key]
 
 
 def run_graph_in_thread(graph_input, config, capture, result_holder, error_holder):
@@ -257,6 +281,13 @@ if st.session_state.phase == "input":
     with col1:
         if st.button("Analyser", type="primary", use_container_width=True):
             if brief.strip():
+                if len(brief.strip()) > MAX_INPUT_LENGTH:
+                    st.error(f"Le brief ne doit pas dépasser {MAX_INPUT_LENGTH} caractères.")
+                    st.stop()
+                if not _check_rate_limit():
+                    st.stop()
+                _hit_timestamps.append(time.time())
+                st.session_state._rate_count += 1
                 st.session_state.brief = brief.strip()
                 st.session_state.phase = "processing"
                 st.rerun()
