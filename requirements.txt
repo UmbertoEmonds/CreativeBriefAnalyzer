@@ -8,4 +8,5 @@ beautifulsoup4>=4.10
 python-dotenv>=1.0
 requests>=2.31
 mistune==3.3.2
+chromadb>=1.5
 sentence-transformers>=3.0
