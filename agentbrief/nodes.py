@@ -9,7 +9,7 @@ import os
 
 from agentbrief.templates import render_dashboard_template
 from agentbrief.utils.md_to_html import markdown_to_html
-from agentbrief.config import MAX_KEYWORDS, TAVILY_MAX_RESULTS, TAVILY_INPUT_LIMIT, MAX_OUTPUT_FILES
+from agentbrief.config import MAX_KEYWORDS, TAVILY_MAX_RESULTS, TAVILY_INPUT_LIMIT, MAX_OUTPUT_FILES, MAX_INPUT_LENGTH
 
 
 _ANALYSIS_PROMPT = ChatPromptTemplate.from_messages([
@@ -137,6 +137,8 @@ Message d'encouragement personnalise et cible pour l'utilisateur.
 def call_model(state: BriefState, llm):
     """Analyze the brief with the LLM and determine if clarifications are needed."""
     user_input = state["input"]
+    if len(user_input) > MAX_INPUT_LENGTH:
+        return {"analyse": f"Erreur : le brief dépasse la limite de {MAX_INPUT_LENGTH} caractères."}
     history_plain = ""
 
     for msg in state["questions_answers"]:
